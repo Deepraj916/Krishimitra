@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% block title %}Plant Disease Detection{% endblock %}
+
+{% block body_class %}detection-page-background{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center">
+                        <h1 class="card-title">Plant Disease Detection System</h1>
+                        <p class="lead text-muted mb-4">Upload a clear photo of an affected plant leaf to get a diagnosis.</p>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('disease_detection') }}" enctype="multipart/form-data" class="text-center border-bottom pb-4 mb-4">
+                        <!-- THIS IS THE FIX: Added 'me-2' class to the label -->
+                        <label for="leaf_image" class="btn btn-success btn-lg me-2">Choose an Image</label>
+                        <input type="file" id="leaf_image" name="leaf_image" accept="image/*" required onchange="previewImage(event)" class="d-none">
+                        <button type="submit" class="btn btn-warning btn-lg">Detect Disease</button>
+                    </form>
+
+                    <!-- Results Section -->
+                    {% if prediction_data %}
+                        <div class="row">
+                            <div class="col-md-5 text-center">
+                                <h3>Uploaded Image</h3>
+                                <img src="{{ url_for('static', filename='leaf_uploads/' + uploaded_image, v=cache_buster) }}" alt="Uploaded Leaf Image" class="img-fluid rounded shadow-sm mb-3">
+                            </div>
+                            <div class="col-md-7">
+                                <h3>AI Diagnosis</h3>
+                                <ul class="list-group">
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Plant Identified:
+                                        <span class="badge bg-primary rounded-pill fs-6">{{ prediction_data.plant_name }}</span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        Condition:
+                                        {% if prediction_data.disease_name == 'Healthy' %}
+                                            <span class="badge bg-success rounded-pill fs-6">{{ prediction_data.disease_name }}</span>
+                                        {% elif 'Error' in prediction_data.disease_name or 'Failed' in prediction_data.disease_name or 'Blocked' in prediction_data.disease_name %}
+                                            <span class="badge bg-warning text-dark rounded-pill fs-6">{{ prediction_data.disease_name }}</span>
+                                        {% else %}
+                                            <span class="badge bg-danger rounded-pill fs-6">{{ prediction_data.disease_name }}</span>
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                                {% if prediction_data.fertilizer_name and prediction_data.fertilizer_name != 'null' %}
+                                    <h5 class="mt-4">Recommended Fertilizer</h5>
+                                    <p><strong>Fertilizer:</strong> {{ prediction_data.fertilizer_name }}</p>
+                                    {% if prediction_data.quantity_for_10_liters and prediction_data.quantity_for_10_liters != 'null' %}
+                                        <p><strong>Minimum Quantity for 10 Liters:</strong> {{ prediction_data.quantity_for_10_liters }}</p>
+                                    {% endif %}
+                                {% endif %}
+                                <h5 class="mt-4">Suggested Remedy</h5>
+                                <p>{{ prediction_data.remedy_description }}</p>
+                                {% if prediction_data.product_keyword %}
+                                    <div class="external-links mt-3">
+                                        <p>Purchase remedy online:</p>
+                                        <a href="{{ amazon_link }}" target="_blank" class="amazon-btn">Search on Amazon</a>
+                                        <a href="{{ flipkart_link }}" target="_blank" class="flipkart-btn">Search on Flipkart</a>
+                                    </div>
+                                {% endif %}
+                                <div class="social-share mt-3">
+                                    <p>Share your results:</p>
+                                    <button class="btn btn-outline-primary me-2" onclick="shareOnTwitter()"><i class="bi bi-twitter"></i> Twitter</button>
+                                    <button class="btn btn-outline-primary me-2" onclick="shareOnFacebook()"><i class="bi bi-facebook"></i> Facebook</button>
+                                    <button class="btn btn-outline-success" onclick="shareOnWhatsApp()"><i class="bi bi-whatsapp"></i> WhatsApp</button>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center mt-4" id="imagePreviewContainer" style="display:none;">
+                            <h3>Image Preview</h3>
+                            <img id="imagePreview" src="#" alt="Image Preview" class="img-fluid rounded shadow-sm" style="max-height: 300px;"/>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Us Section -->
+    <div class="detection-about text-center mt-5">
+        <p>About Krishimitra - Your AI-Powered Agricultural Companion</p>
+        <a href="{{ url_for('about') }}" class="btn btn-outline-light">Learn More</a>
+    </div>
+</div>
+
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function(){
+            var output = document.getElementById('imagePreview');
+            output.src = reader.result;
+            document.getElementById('imagePreviewContainer').style.display = 'block';
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function shareOnTwitter() {
+        const plant = {{ (prediction_data.plant_name if prediction_data else '')|tojson }};
+        const disease = {{ (prediction_data.disease_name if prediction_data else '')|tojson }};
+        const text = `I detected ${disease} on my ${plant} using Krishimitra! 🌱 Check out this AI-powered agricultural tool.`;
+        const url = window.location.href;
+        const shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        window.open(shareUrl, '_blank');
+    }
+
+    function shareOnFacebook() {
+        const url = window.location.href;
+        const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        window.open(shareUrl, '_blank');
+    }
+
+    function shareOnWhatsApp() {
+        const plant = {{ (prediction_data.plant_name if prediction_data else '')|tojson }};
+        const disease = {{ (prediction_data.disease_name if prediction_data else '')|tojson }};
+        const text = `I detected ${disease} on my ${plant} using Krishimitra! 🌱 Check it out: ${window.location.href}`;
+        const shareUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(shareUrl, '_blank');
+    }
+</script>
+{% endblock %}

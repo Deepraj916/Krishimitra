@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Admin Dashboard</h1>
+    </div>
+
+    <!-- START: New Statistics Section -->
+    <div class="row mb-4">
+        <!-- Total Users Card -->
+        <div class="col-md-4">
+            <div class="card text-white bg-primary shadow">
+                <div class="card-body text-center">
+                    <h1 class="card-title display-4">{{ user_count }}</h1>
+                    <p class="card-text">Total Registered Users</p>
+                </div>
+            </div>
+        </div>
+        <!-- Total Products Card -->
+        <div class="col-md-4">
+            <div class="card text-white bg-success shadow">
+                <div class="card-body text-center">
+                    <h1 class="card-title display-4">{{ product_count }}</h1>
+                    <p class="card-text">Total Products Listed</p>
+                </div>
+            </div>
+        </div>
+        <!-- Total Conversations Card -->
+        <div class="col-md-4">
+            <div class="card text-white bg-info shadow">
+                <div class="card-body text-center">
+                    <h1 class="card-title display-4">{{ conversation_count }}</h1>
+                    <p class="card-text">Total Conversations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END: New Statistics Section -->
+
+    <!-- User Management Card (remains the same) -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header">
+            <h4 class="mb-0">User Management</h4>
+        </div>
+        <div class="card-body">
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Mobile</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td>{{ user.id }}</td>
+                                    <td>{{ user.name }}</td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.mobile }}</td>
+                                    <td>
+                                        {% if user.role == 'admin' %}
+                                            <span class="badge bg-danger">{{ user.role|capitalize }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ user.role|capitalize }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <!-- Prevent the delete button from showing for your own account -->
+                                        {% if user.id != session.get('user_id') %}
+                                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this user and all their products?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                            </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No users found.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Product Management Card (remains the same) -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h4 class="mb-0">Product Management</h4>
+        </div>
+        <div class="card-body">
+            {% if products %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Image</th>
+                                <th>Product Name</th>
+                                <th>Seller</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                                <tr>
+                                    <td>{{ product.id }}</td>
+                                    <td>
+                                        <img src="{{ product.image if product.image.startswith('http') else url_for('static', filename='product_uploads/' + product.image) }}" alt="{{ product.name }}" width="60" class="img-thumbnail" style="height: 60px; object-fit: cover;">
+                                    </td>
+                                    <td>{{ product.name }}</td>
+                                    <td>{{ product.seller_user.email }}</td>
+                                    <td>{{ product.price }}</td>
+                                    <td>
+                                        <form action="{{ url_for('admin_delete_product', product_id=product.id) }}" method="POST" onsubmit="return confirm('ADMIN ACTION: Are you sure you want to permanently delete this product?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted">No products have been listed on the website yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

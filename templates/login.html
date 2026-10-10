@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Login - Krishimitra{% endblock %}
+
+{% block body_class %}login-page-background{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <h2 class="card-title text-center mb-4">Login to Your Account</h2>
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <div class="mb-3">
+                <label for="email" class="form-label">Email or Mobile Number</label>
+                <input type="text" class="form-control" id="email" name="email" placeholder="Enter email or 10-digit mobile" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100 mt-3">Login</button>
+
+            <div class="text-center mt-3">
+                <small class="text-muted">
+                    <a href="{{ url_for('forgot_password') }}">Forgot Password?</a> | New user? <a href="{{ url_for('register') }}">Please Register</a>
+                </small>
+            </div>
+            </form>
+    </div>
+</div>
+{% endblock %}

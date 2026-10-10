@@ -1,0 +1,7 @@
+.env
+venv/
+myenv/
+instance/
+__pycache__/
+*.pyc
+seed_cloud.py
